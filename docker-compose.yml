@@ -1,9 +1,17 @@
 services:
   vaultwarden:
-    image: vaultwarden/server:1.32.7-alpine
+    # Checar sempre a versão mais nova em https://hub.docker.com/r/vaultwarden/server/tags
+    image: vaultwarden/server:1.34.1-alpine
     volumes:
       - '${ROOT_PATH}/Data/Vaultwarden:/data'
     restart: always
+    # O Vaultwarden vai rodar na porta 280 e 2443, caso essas portas estejam em uso em seu 
+    # ambiente troque para qualquer outra, pois essas portas só serão usadas para localhost
+    # para uso do proxy reverso nginx ou apache2
+    ports:
+      - "280:80"
+      - "2443:443"
+      - "3012:3012"
     environment:
       DOMAIN: '${DOMAIN}'
       SIGNUPS_ALLOWED: '${SIGNUPS_ALLOWED}'
@@ -53,15 +61,10 @@ services:
       PUSH_IDENTITY_URI: '${PUSH_IDENTITY_URI}'
     networks:
       - default
-      - traefik-proxy
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.${PROJECT_IDENTIFIER}.tls=true'
-      - 'traefik.http.routers.${PROJECT_IDENTIFIER}.entrypoints=https'
-      - 'traefik.http.routers.${PROJECT_IDENTIFIER}.rule=Host(`${VIRTUAL_HOST}`)'
-      - 'traefik.http.routers.${PROJECT_IDENTIFIER}.service=${PROJECT_IDENTIFIER}'
-      - 'traefik.http.services.${PROJECT_IDENTIFIER}.loadbalancer.server.port=80'
 
+  # Container que terá o trabalho apenas de fazer o backup do banco de dados do vaultwarden
+  # para a pasta ./Data/Vaultwarden-Backup/, entretanto ela só está mantendo 1 backup, verificare
+  # uma forma de manter os backups dos ultimos 30 dias por exemplo
   vw_backup:
     image: bruceforce/bw_backup:latest #swap tag to rpi3 to run on a raspberry pi
     restart: on-failure
@@ -84,6 +87,3 @@ services:
 networks:
   default:
     driver: bridge
-  traefik-proxy:
-    name: ${DOCKER_NETWORK_NAME}
-    external: true
