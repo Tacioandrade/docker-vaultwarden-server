@@ -1,50 +1,71 @@
-# Vaultwarden with Traefik
+# Vaultwarden em docker-compose.yml para ser rodado com algum proxy reverso
 
-This repository helps to host your own [Vaultwarden](https://github.com/dani-garcia/vaultwarden) instance on your
-server or a raspberry-pi.
+Esse meu projeto é um fork de outro aqui do Github, porém enquanto o intuito do projeto original
+é ser rodado em um servidor apenas com o [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
+em seu servidor, esse meu projeto nada mais é que uma pequena modificação dele que roda o Vaultwarden
+na porta 280 do seu host e que deve usar algum proxy reverso a sua escolha como:
+- Apache2 - Possui um modelo de arquivo de configuração no repositório
+- nginx - Possui um modelo de arquivo de configuração no repositório
+- NginxProxyManager
+- Qualquer outro proxy reverso do mercado
 
+## Prerequisitos
 
-## Prerequisites
-
-Before you begin, ensure you have the following prerequisites:
-
-- [Docker](https://www.docker.com/) installed and configured on your server.
-- [Docker Compose](https://docs.docker.com/compose/install/) installed.
-- [Traefik-Proxy](https://github.com/erkenes/docker-traefik) installed.
-- A registered domain name.
+Antes de começar a mexer com o projeto, tenha os seguintes itens prontos
+- Git
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- Um domínio ou subdomínio configurado e apontando para o servidor onde está o seu Vaultwarden
 
 
 ## Getting Started
 
-Copy this repository to your server.
+Clone esse repositório para seu servidor
 ```shell
-git clone https://github.com/erkenes/docker-vaultwarden-server.git /docker/vaultwarden
+git clone https://github.com/tacioandrade/docker-vaultwarden-server/
 ```
 
-Navigate to the repository directory:
+Entre no repositório clonado
 ```shell
-cd /docker/vaultwarden
+cd docker-vaultwarden-server/
 ```
 
-Copy the `.env` file.
+Copie o arquivo `.env.example` para o arquivo de variáveis `.env`
 ```shell
 cp .env.example .env
 ```
 
-Start the containers with
-
+Edire o arquivo `.env`, modificando as variáveis que achar necessário, inicialmente só é necessário a VIRTUAL_HOST
 ```shell
-docker-compose up -d
+nano .env
 ```
 
-:warning: You have to install [Traefik](https://github.com/erkenes/docker-traefik) as well. 
+Por fim, suba o projeto com o comando:
+```shell
+docker compose up -d
+```
 
-## Settings
+## Configurações
 
-In the docker-compose.yml file the admin-token is disabled. If this setting is disabled you are not able to open the
-admin page (`yourhost.local/admin`).
+Após subir o Vaultwarden, configure o proxy reverso que desejar para este projeto e use a ferramenta certbot para
+gerar o certificado https válido para seu subdomínio que está usando para o Vaultwarden apontando para http://ip-host:280
 
-## Configuration for environment variables
+Com o sistema abrindo pelo domínio correto, recomendo que entre na página de administração do Vualtwaden e faça a configuração
+do mesmo. a página será https://senhas.seudominio.com/admin e a senha é admin123
+
+Após configurar as opções corretamente, conforme seu uso, recomendo trocar essa senha, para evitar que outras pessoas tenham
+acesso a página de configuração do sistema.
+
+Além disso, caso queira aumentar a segurança, edite o .env e troque de false para true a opção: DISABLE_ADMIN_TOKEN, para que
+com isso a página de administração fique desativada.
+
+Após toda essa configuração ser feita, pare o Vaultwarden e suba novamente para carregar as novas configurações:
+```shell
+docker compose down
+docker compose up -d
+```
+
+## Segue abaixo uma explicação das variáveis de ambiente do .env para que consiga entender melhor e implementar da melhor forma possível
 
 ### SIGNUPS_ALLOWED
 
@@ -141,7 +162,7 @@ Controls whether users can change their email. This setting applies globally to 
 
 [More information](https://github.com/dani-garcia/vaultwarden/wiki/Logging)
 
-### Syncing users from LDAP 
+### Syncing users from LDAP
 
 [More information](https://github.com/dani-garcia/vaultwarden/wiki/Syncing-users-from-LDAP)
 
